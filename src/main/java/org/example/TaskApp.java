@@ -6,113 +6,200 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.time.LocalDate;
 import java.util.Objects;
 
-public class TaskApp extends Application {//extends the fx class
+public class TaskApp extends Application {
 
-    private final ObservableList<Task> tasks = FXCollections.observableArrayList();//pulls data from the list of tasks
+    private final ObservableList<Task> tasks = FXCollections.observableArrayList();
 
-    @Override//override current functionality
-    public void start(Stage primaryStage) {//method for implementing the GUI
-
+    @Override
+    public void start(Stage primaryStage) {
         // ---------- Title ----------
-        Label title = new Label("Task Manager");//gives the GUI a title
-        //title.setStyle("-fx-font-size: 50px; -fx-font-weight: bold;");
-        title.getStyleClass().add("title");//external style sheet (GUIStyle.css)
+        Label title = new Label("Task Manager");
+        title.getStyleClass().add("title");
 
         HBox titleBox = new HBox(title);
-        HBox.setHgrow(titleBox, Priority.ALWAYS);
-        HBox.setMargin(title, new Insets(30, 0, 30, 0));
-
         titleBox.setAlignment(Pos.CENTER);
-        titleBox.setMaxWidth(Double.MAX_VALUE);
+        titleBox.setPadding(new Insets(20, 0, 20, 0));
         titleBox.setStyle("-fx-background-color: #0B3D91; -fx-background-radius: 8");
 
         // ---------- Table ----------
         TableView<Task> tableView = new TableView<>();
         tableView.setItems(tasks);
 
-
         TableColumn<Task, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        idColumn.setMaxWidth(50);
-        idColumn.setStyle("-fx-background-color: #F4F4F4;");
-
+        idColumn.setPrefWidth(50);
 
         TableColumn<Task, String> titleColumn = new TableColumn<>("Title");
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
-        titleColumn.setMaxWidth(200);
-        titleColumn.setStyle("-fx-background-color: #F4F4F4;");
+        titleColumn.setPrefWidth(200);
 
         TableColumn<Task, String> descColumn = new TableColumn<>("Description");
         descColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descColumn.setMaxWidth(300);
-        descColumn.setStyle("-fx-background-color: #F4F4F4;");
+        descColumn.setPrefWidth(300);
 
-        TableColumn<Task, String> dueColumn = new TableColumn<>("Due Date");
+        TableColumn<Task, LocalDate> dueColumn = new TableColumn<>("Due Date");
         dueColumn.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-        dueColumn.setMaxWidth(300);
-        dueColumn.setStyle("-fx-background-color:#F4F4F4;");
+        dueColumn.setPrefWidth(150);
 
+        // ---------- Completed Column with Radio Buttons ----------
         TableColumn<Task, Boolean> completeColumn = new TableColumn<>("Completed");
-        descColumn.setCellValueFactory(new PropertyValueFactory<>("completed"));
-        completeColumn.setMaxWidth(300);
-        completeColumn.setStyle("-fx-background-color: #F4F4F4;");
+        completeColumn.setCellValueFactory(new PropertyValueFactory<>("completed"));
+        completeColumn.setPrefWidth(150);
 
+        completeColumn.setCellFactory(col -> new TableCell<Task, Boolean>() {
+            private final RadioButton yesButton = new RadioButton("Yes");
+            private final RadioButton noButton = new RadioButton("No");
+            private final ToggleGroup toggleGroup = new ToggleGroup();
 
+            {
+                yesButton.setToggleGroup(toggleGroup);
+                noButton.setToggleGroup(toggleGroup);
+
+                toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+                    if (newToggle != null && getTableRow() != null && getTableRow().getItem() != null) {
+                        Task task = getTableRow().getItem();
+                        task.setCompleted(newToggle == yesButton);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Boolean completed, boolean empty) {
+                super.updateItem(completed, empty);
+
+                if (empty || getTableRow().getItem() == null) {
+                    setGraphic(null);
+                } else {
+                    if (completed != null && completed) {
+                        yesButton.setSelected(true);
+                    } else {
+                        noButton.setSelected(true);
+                    }
+                    HBox box = new HBox(5, yesButton, noButton);
+                    box.setAlignment(Pos.CENTER);
+                    setGraphic(box);
+                }
+            }
+        });
+
+        // let table expand
         HBox.setHgrow(tableView, Priority.ALWAYS);
-
-        //noinspection deprecation
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setFixedCellSize(25);
-
-        //noinspection unchecked
         tableView.getColumns().addAll(idColumn, titleColumn, descColumn, dueColumn, completeColumn);
+
+        // ---------- Input Fields ----------
+        TextField titleInput = new TextField();
+        titleInput.setPromptText("Title");
+
+        TextField descInput = new TextField();
+        descInput.setPromptText("Description");
+
+        DatePicker dueDateInput = new DatePicker();
+        dueDateInput.setPromptText("Due Date");
+
+        HBox inputBox = new HBox(10, titleInput, descInput, dueDateInput);
+        inputBox.setAlignment(Pos.CENTER_LEFT);
+        inputBox.setPadding(new Insets(10, 0, 10, 0));
 
         // ---------- Buttons ----------
         Button addButton = new Button("Add");
-        addButton.getStyleClass().add("add-button");//external style sheet (GUIStyle.css)
+        addButton.getStyleClass().add("add-button");
+        addButton.setOnAction(e -> {
+            try {
+                String taskTitle = titleInput.getText();
+                String taskDesc = descInput.getText();
+                LocalDate taskDue = dueDateInput.getValue();
 
+                if (taskTitle.isEmpty() || taskDesc.isEmpty() || taskDue == null) {
+                    showAlert("Error", "All fields must be filled.");
+                    return;
+                }
+
+                Task newTask = new Task(taskTitle, taskDesc, taskDue, false);
+                tasks.add(newTask);
+
+                titleInput.clear();
+                descInput.clear();
+                dueDateInput.setValue(null);
+
+            } catch (IllegalArgumentException ex) {
+                showAlert("Invalid Date", ex.getMessage());
+            }
+        });
 
         Button updateButton = new Button("Update");
-        updateButton.getStyleClass().add("update-button");//external style sheet (GUIStyle.css)
+        updateButton.getStyleClass().add("update-button");
+        updateButton.setOnAction(e -> {
+            Task selectedTask = tableView.getSelectionModel().getSelectedItem();
+            if (selectedTask == null) {
+                showAlert("Error", "No task selected to update.");
+                return;
+            }
 
+            try {
+                String newTitle = titleInput.getText();
+                String newDesc = descInput.getText();
+                LocalDate newDue = dueDateInput.getValue();
+
+                if (!newTitle.isEmpty()) selectedTask.setTitle(newTitle);
+                if (!newDesc.isEmpty()) selectedTask.setDescription(newDesc);
+                if (newDue != null) selectedTask.setDueDate(newDue);
+
+                // refresh table view to reflect changes
+                tableView.refresh();
+
+                titleInput.clear();
+                descInput.clear();
+                dueDateInput.setValue(null);
+
+            } catch (IllegalArgumentException ex) {
+                showAlert("Invalid Date", ex.getMessage());
+            }
+        });
 
         Button deleteButton = new Button("Delete");
-        deleteButton.getStyleClass().add("delete-button");//external style sheet (GUIStyle.css)
+        deleteButton.getStyleClass().add("delete-button");
+        deleteButton.setOnAction(e -> {
+            Task selectedTask = tableView.getSelectionModel().getSelectedItem();
+            if (selectedTask != null) {
+                tasks.remove(selectedTask);
+            } else {
+                showAlert("Error", "No task selected to delete.");
+            }
+        });
 
+        HBox buttonBox = new HBox(15, addButton, updateButton, deleteButton);
+        buttonBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox buttonBox = new VBox(15, addButton,  updateButton, deleteButton);
-        buttonBox.setPadding(new Insets(30, 0, 0,0));
-
-        // ---------- Table + Buttons HBox ----------
-        HBox tableWithButtons = new HBox(20, tableView, buttonBox);
-        tableWithButtons.setAlignment(Pos.CENTER);
-
-        // ---------- Root VBox ----------
-        VBox root = new VBox(20, titleBox, tableWithButtons);
+        // ---------- Root Layout ----------
+        VBox root = new VBox(20, titleBox, inputBox, buttonBox, tableView);
         root.setPadding(new Insets(20));
 
         // ---------- Scene ----------
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1000, 600);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/GUIStyle.css")).toExternalForm());
 
-       scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/GUIStyle.css")).toExternalForm());
         primaryStage.setScene(scene);
-        //primaryStage.setTitle("Task App");
+        primaryStage.setTitle("Task App");
         primaryStage.show();
+    }
 
-        // ---------- Example data ----------
-
-
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     public static void main(String[] args) {
