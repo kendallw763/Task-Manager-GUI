@@ -21,7 +21,7 @@ Build Tool: Maven
 
 IDE: IntelliJ IDEA
 
-## 📷 Screenshots
+## 📷 Screenshot
 <img width="861" height="724" alt="GUI" src="https://github.com/user-attachments/assets/90623163-0182-4685-abcd-c345d59d03a9" />
 
 
