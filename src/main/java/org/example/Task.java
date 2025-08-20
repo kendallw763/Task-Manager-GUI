@@ -14,11 +14,11 @@ public class Task {
         this.id = idCounter++;
         this.title = title;
         this.description = description;
-        this.dueDate = dueDate;
+        setDueDate(dueDate); // use validation
         this.completed = completed;
-        System.out.println(this);
     }
 
+    @Override
     public String toString() {
         return "Id: " + id + "\n"
                 + "Title: " + title + "\n"
@@ -28,26 +28,25 @@ public class Task {
                 + "\n";
     }
 
-    //GETTERS/SETTERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // GETTERS
     public int getId(){return id;}
+    public String getTitle(){return title;}
+    public String getDescription(){return description;}
+    public LocalDate getDueDate(){return dueDate;}
+    public boolean isCompleted(){return completed;}
 
+    // SETTERS
     public void setId(Integer id){this.id = id;}
-
     public void setTitle(String title){this.title = title;}
-
     public void setDescription(String description){this.description = description;}
-
     public void setCompleted(boolean completed){this.completed = completed;}
 
-    //Checks if the due date is in the past and throws an exception if it is~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Validation for due date
     public void setDueDate(LocalDate dueDate){
-
         if (dueDate.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Dates must be present or in the future. Select a valid date.");
-        }else{
+            throw new IllegalArgumentException("Dates must be today or in the future. Select a valid date.");
+        } else {
             this.dueDate = dueDate;
-            }
         }
     }
-
-
+}
