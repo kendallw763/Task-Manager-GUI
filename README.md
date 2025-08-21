@@ -2,15 +2,15 @@
 This is a JavaFX-based Task Manager GUI Application that allows users to create, update, and manage tasks with due dates and completion tracking. It demonstrates object-oriented programming principles, GUI design, and integration with Java collections.
 
 ## 🚀 Features
-✅ Add, edit, and delete tasks
 
-📅 Set due dates for tasks
+ Add, edit, and delete tasks
 
-🔍 Search or filter tasks
+ Set due dates for tasks
+ Search or filter tasks
 
-💾 Save/load tasks (if implemented)
+ Save/load tasks (if implemented)
 
-🎨 User-friendly GUI built with JavaFX
+ User-friendly GUI built with JavaFX
 
 ## 🛠️ Tech Stack
 Language: Java
